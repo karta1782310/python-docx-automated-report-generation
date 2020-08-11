@@ -1,0 +1,19 @@
+在 .env 檔案中：
+    環境變數：
+        WEB_SEVER_NAME : 此為設定回收風險資訊動作的 apache 的 servername
+        DB_HOST : 此為設定資料庫主機的 hostname
+        DB_SMTP_DOMAIN : 此為設定資料庫中，模板資料的 domain
+
+    卷積：
+        DB_DATA : 此為資料庫所有的資料
+        MAIL_DATA : 此為 mailserver 中，所有使用者的收信夾
+        MAIL_LOGS : 此為 mailserver 主機的 logs 資訊 (mail.log)
+
+！！！特別注意！！！
+在 mailserver 中，由於環境變數無法設定其中的資料．因此在建立 images 前，需修改本資料夾中的資料。
+    postfix :
+        hostname : 位於 postfix/main.cf 第 40 行
+        authenticate user : 位於 postfix/mysql-virtual.... 的三個資料，需更改為使用者資料庫資訊
+    dovecot :
+        postmaster_address : 位於 dovecot/dovecot.conf 第 27 行，此為會收到任何信件流程錯誤資訊的管理者
+        authenticate user : 位於 dovecot/dovecot-sql.conf.ext 第 71 行，需更改為使用者資料庫資訊

@@ -1,0 +1,100 @@
+version: '3'
+services:
+    mailserver:
+        tty: true
+        stdin_open: true
+        image: my_mailserver:latest
+        build: 
+            context: .
+            dockerfile: ./Dockerfile-mailserver
+        container_name: dev_mailserver
+        environment: 
+            - SMTP_HOST_NAME=${SMTP_SERVER_NAME}
+            - DB_HOST_NAME=${DB_HOST_NAME}
+        ports:
+            - "25:25"
+            - "465:465"
+            - "587:587"
+            - "993:993"
+        volumes:
+            - ${MAIL_DATA}:/var/mail
+            - ${MAIL_LOGS}:/var/log/
+        depends_on:
+            - mysql
+        networks:
+            my_network:
+                ipv4_address: 172.16.0.2
+        restart: always
+            
+    webserver:
+        tty: true
+        stdin_open: true
+        image: my_webserver:latest
+        build: 
+            context: .
+            dockerfile: ./Dockerfile-webserver
+        container_name: dev_webserver
+        environment: 
+            - APACHE_SEVER_NAME=${WEB_SERVER_NAME}
+        ports:
+            - "80:80"
+            - "443:443"
+            - "6666:6666"
+        depends_on:
+            - mysql
+            - phpmyadmin
+        networks:
+            my_network:
+                ipv4_address: 172.16.0.3
+        restart: always
+
+    mysql:
+        image: my_sql:latest
+        build: 
+            context: .
+            dockerfile: ./Dockerfile-mysql
+        container_name: dev_database
+        hostname: ${DB_HOST_NAME}
+        environment: 
+            - SMTP_HOST_NAME=${SMTP_SERVER_NAME}
+            - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+        ports:
+            - "3306:3306"
+        volumes:
+            - ${DB_DATA}:/var/lib/mysql
+        networks:
+            my_network:
+                ipv4_address: 172.16.0.4
+        restart: always
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: dev_phpmyadmin
+        ports:
+            - "8080:80"
+        environment:
+            PMA_HOST: ${DB_HOST_NAME}
+            PMA_PORT: 3306
+            PMA_ARBITRARY: 1
+        networks:
+            my_network:
+                ipv4_address: 172.16.0.5
+        restart: always 
+
+volumes:
+    db_data:
+        driver: local
+    maildata:
+        driver: local
+    mailstate:
+        driver: local
+    maillogs:
+        driver: local
+
+networks:
+    my_network:
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.16.0.0/16

@@ -1,0 +1,6 @@
+user = mailserver    
+password = mailserver123  
+# hosts = yumail.myvnc.com
+hosts = db_host_name
+dbname = mailserver  
+query = SELECT 1 FROM virtual_users WHERE email='%s'

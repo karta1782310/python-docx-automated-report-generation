@@ -1,0 +1,14 @@
+在 .env 檔案中：
+    環境變數：
+        SMTP_SEVER_NAME : 此為設定 mail server 中，postfix 的 hostname，
+                          並用於資料庫初始化 mail server 的 domain 及 user 範例資料。
+        
+        DB_HOST_NAME : 此為設定資料庫主機的 hostname，並用於 mail server 中，使用者認證所需的資料庫。
+        DB_ROOT_PASSWORD : 此為設定資料庫的 root 密碼。
+
+        WEB_SEVER_NAME : 此為設定回收風險資訊動作的 apache 的 server name。
+
+    卷積：
+        DB_DATA : 此為資料庫所有的資料
+        MAIL_DATA : 此為 mailserver 中，所有使用者的收信夾
+        MAIL_LOGS : 此為 mailserver 主機的 logs 資訊 (mail.log)

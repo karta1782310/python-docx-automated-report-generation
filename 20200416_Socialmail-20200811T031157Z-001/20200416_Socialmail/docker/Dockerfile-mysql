@@ -1,0 +1,18 @@
+FROM mysql:5.7.24
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# configure mysql
+RUN usermod -d /var/lib/mysql/ mysql
+RUN ln -s /var/lib/mysql/mysql.sock /tmp/mysql.sock
+RUN chown -R mysql:mysql /var/lib/mysql
+
+COPY mysql/mysqld.cnf /etc/mysql/mysql.conf.d/
+RUN chmod 644 /etc/mysql/mysql.conf.d/mysqld.cnf
+
+COPY mysql/init.sql /docker-entrypoint-initdb.d/
+COPY shell/sql_mailserver.sh /docker-entrypoint-initdb.d/
+RUN chown mysql:mysql /docker-entrypoint-initdb.d/
+
+# configure system
+RUN cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime

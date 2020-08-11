@@ -1,0 +1,18 @@
+docker run -it -p 25:25 -p 80:80 -p 465:465 -p 587:587 -p 993:993 -p 3306:3306 -p 6666:6666 --hostname yumail.myvnc.com 
+
+-p 25:25 -p 80:80 -p 465:465 -p 587:587 -p 993:993 -p 3306:3306 -p 6666:6666 
+
+service postfix start
+service dovecot start
+service mysql start
+service rsyslog start
+service apache2 start
+python3 /var/www/socialmails/schedule_server/server.py &
+netstat -tlnp
+tail -f /var/log/mail.log
+
+mysql -u socialmails --password=socialmails123 socialmails << EOF
+truncate table eml_files;
+truncate table mail_recipients;
+truncate table user_logs;
+EOF

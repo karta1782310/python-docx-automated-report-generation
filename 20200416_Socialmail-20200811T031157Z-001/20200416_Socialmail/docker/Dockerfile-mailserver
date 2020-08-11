@@ -1,0 +1,62 @@
+FROM ubuntu:16.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN apt-get -y update && \
+    apt-get -y install postfix postfix-mysql &&\
+    apt-get -y install --no-install-recommends \
+        net-tools \
+        dovecot-core \
+        dovecot-imapd \
+        dovecot-pop3d \
+        dovecot-lmtpd \
+        dovecot-mysql \
+        rsyslog \
+        locales \
+        tzdata \
+        vim &&\
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* &&\
+    rm -rf /usr/share/locale/* && \
+    rm -rf /usr/share/man/* && \
+    rm -rf /usr/share/doc/*
+
+# configure postfix
+COPY postfix/main.cf \
+    postfix/master.cf \
+    postfix/mysql-virtual-alias-maps.cf \
+    postfix/mysql-virtual-mailbox-domains.cf \
+    postfix/mysql-virtual-mailbox-maps.cf /etc/postfix/
+
+# configure dovecot
+RUN mkdir -p /var/mail/vhosts/yumail.myvnc.com &&\
+    groupadd -g 5000 vmail  &&\
+    useradd -g vmail -u 5000 vmail -d /var/mail &&\
+    chown -R vmail:vmail /var/mail &&\
+    chown -R vmail:dovecot /etc/dovecot &&\
+    chmod -R o-rwx /etc/dovecot &&\
+    chown syslog:adm /var/log &&\
+    chmod 0775 /var/log
+
+COPY dovecot/dovecot.conf dovecot/dovecot-sql.conf.ext dovecot/dovecot.pem /etc/dovecot/
+COPY dovecot/conf.d/10-auth.conf \
+    dovecot/conf.d/10-mail.conf \
+    dovecot/conf.d/10-master.conf \
+    dovecot/conf.d/10-ssl.conf \
+    dovecot/conf.d/auth-sql.conf.ext /etc/dovecot/conf.d/
+COPY dovecot/dovecot.key /etc/dovecot/private
+
+# configure system
+RUN cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime
+RUN sed -i -e 's/# \(zh_TW\.UTF-8 .*\)/\1/' /etc/locale.gen && locale-gen
+ENV LANG=zh_TW.UTF-8 \ LANGUAGE=zh_TW \ LC_ALL=zh_TW.UTF-8
+
+WORKDIR /var/log/
+EXPOSE 25 465 587 993 995
+
+COPY shell/start_mailserver.sh /tmp/
+CMD ["/tmp/start_mailserver.sh"]
+
+

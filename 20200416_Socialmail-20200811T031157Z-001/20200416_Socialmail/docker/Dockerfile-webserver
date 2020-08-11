@@ -1,0 +1,39 @@
+FROM php:7.1-apache
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update &&\
+    apt-get install -y python3 &&\
+	apt-get install -y --no-install-recommends \
+        apt-utils \
+        net-tools \
+        python3-pip \
+        rsyslog \
+        locales \
+        tzdata \
+        vim \
+        at &&\
+    pip3 install --upgrade pip &&\
+    pip3 install pandas pymysql xlrd &&\
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* &&\
+    rm -rf /usr/share/man/* && \
+    rm -rf /usr/share/doc/*
+
+# configure apache2
+COPY socialmails/ /var/www/socialmails/
+WORKDIR /etc/apache2/sites-available
+COPY apache/socialmails.conf socialmails.conf
+RUN a2dissite 000-default.conf default-ssl.conf && a2ensite socialmails.conf
+# RUN echo "ServerName localhost" > /etc/apache2/conf-available/servername.conf && a2enconf servername
+
+# configure system
+RUN cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime
+RUN sed -i -e 's/# \(zh_TW\.UTF-8 .*\)/\1/' /etc/locale.gen && locale-gen
+ENV LANG=zh_TW.UTF-8 \ LANGUAGE=zh_TW \ LC_ALL=zh_TW.UTF-8
+
+WORKDIR /var/www/socialmails/
+EXPOSE 80 6666
+
+COPY shell/start_webserver.sh /tmp/
+CMD ["/tmp/start_webserver.sh"]
